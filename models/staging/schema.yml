@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: One row per customer, as the warehouse contract defines it.
+    columns:
+      - name: customer_id
+        description: Primary key.
+        tests: [unique, not_null]
+      - name: email
+        description: Required. Blank strings are cast to NULL upstream, so a blank fails here.
+        tests: [not_null]
+      - name: country
+        description: ISO-3166 alpha-2 only.
+        tests:
+          - accepted_values:
+              values: ["US", "DE", "GB", "KR"]
+      - name: signup_date
+        tests:
+          - dbt_utils_not_in_future
+
+  - name: stg_orders
+    description: One row per order. The contract the mart is allowed to assume.
+    columns:
+      - name: order_id
+        tests: [unique, not_null]
+      - name: customer_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('stg_customers')
+              field: customer_id
+      - name: amount
+        description: Required, non-negative, and within a plausible magnitude.
+        tests:
+          - not_null
+          - non_negative
+          - within_magnitude:
+              max_value: 100000
+      - name: status_raw
+        description: Case matters downstream, so the raw value is tested, not the normalised one.
+        tests:
+          - accepted_values:
+              values: ["placed", "shipped", "delivered", "returned"]
+      - name: currency
+        description: The mart sums without conversion, so a single currency is part of the contract.
+        tests:
+          - accepted_values:
+              values: ["USD"]
+      - name: order_date
+        tests:
+          - within_reporting_window:
+              start_date: "2025-06-01"

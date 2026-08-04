@@ -1,0 +1,22 @@
+name: warehouse_quality_gate
+version: "1.0.0"
+config-version: 2
+profile: warehouse_quality_gate
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+target-path: "target"
+clean-targets: ["target", "dbt_packages"]
+seeds:
+  warehouse_quality_gate:
+    +quote_columns: false
+models:
+  warehouse_quality_gate:
+    staging:
+      +materialized: view
+    marts:
+      +materialized: table
+vars:
+  customers_seed: raw_customers_clean
+  orders_seed: raw_orders_clean
