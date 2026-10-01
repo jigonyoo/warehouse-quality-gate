@@ -1,8 +1,12 @@
-"""What a plain load reports, next to what the contract reports.
+"""What a plain load reports for each batch. (For what the contract reports, run
+scripts/run_evidence.sh.)
 
-Neither run raises an error at load time. That is the point: the sabotaged batch
-parses cleanly, lands in the warehouse, and produces a revenue number that looks
-entirely reasonable until you compare it with the truth.
+This script sums the CSV rows the way an untested load would; the same sums come
+out of the DuckDB raw tables that dbt seeds from these files. Nothing in that path
+raises an error. That is the point: the sabotaged batch parses cleanly, lands, and
+produces a revenue number nobody questions until it is compared with something else. The two batches are separate draws from
+the same generator, not the same rows with edits, so their difference is not "the
+cost of the defects" - most of it is one row.
 """
 import csv, duckdb
 
@@ -30,6 +34,15 @@ ls, rs = naive_revenue(sab)
 print("PLAIN LOAD - no contract, no tests")
 print(f"  clean batch      rows loaded {lc:>5}   revenue reported ${rc:>14,.2f}   errors raised 0")
 print(f"  sabotaged batch  rows loaded {ls:>5}   revenue reported ${rs:>14,.2f}   errors raised 0")
-print(f"  difference       {ls-lc:+} rows        {rs-rc:+,.2f}  ({(rs-rc)/rc*100:+.1f}%)")
+print(f"  difference       {ls-lc:+} rows        {rs-rc:+,.2f}   (two separate draws, not the same rows)")
+amounts = []
+for r in sab:
+    try:
+        amounts.append((float(r["amount"] or 0), r["order_id"]))
+    except ValueError:
+        pass
+top, top_id = max(amounts)
+print(f"  largest order in the sabotaged batch: {top_id} at ${top:,.2f}; "
+      f"without it the batch sums to ${rs - top:,.2f}")
 print()
 print("  Both loads succeeded. Nothing in the plain path noticed a problem.")

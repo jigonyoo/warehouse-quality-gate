@@ -1,13 +1,13 @@
 defect_id,table,description
 D1,customers,Duplicate customer_id 8 - a re-sent file loaded twice
-D2,customers,"customer 16 has an empty email, loaded as a blank string not NULL"
+D2,customers,customer 16 has an empty email
 D3,customers,country 'USA' instead of ISO-2 'US' - one upstream system changed format
-D4,customers,signup_date in the future - a timezone bug upstream
+D4,customers,signup_date in the future
 D5,orders,order 101 points at customer 99999 which does not exist
-D6,orders,order 201 has a negative amount with status 'placed'
+D6,orders,order 201 has a negative amount on an order that is not a refund
 D7,orders,orders 301-302 switched to EUR mid-file while the mart still sums as USD
-D8,orders,order 401 amount is 4.5M - a cents/dollars unit mix-up
+D8,orders,order 401 amount is 4.5M - thousands of times any other order
 D9,orders,status 'Delivered' with a capital D - breaks exact-match filters
 D10,orders,order 601 appears twice - double revenue recognition
 D11,orders,order 701 dated before the reporting window opens
-D12,orders,order 801 amount arrived empty and loads as 0
+D12,orders,order 801 amount arrived empty

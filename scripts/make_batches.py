@@ -1,4 +1,7 @@
-"""Generate a clean batch and a sabotaged batch of the same source data.
+"""Generate a clean batch and a sabotaged batch from the same generator.
+
+The two are separate draws (the sabotaged one is generated after the clean one
+from the same seeded RNG), not the same rows with edits applied.
 
 The sabotaged batch carries 12 planted defects. Each defect is the kind that a
 plain load accepts without complaint - the file parses, the rows land, and the
@@ -30,11 +33,11 @@ def customers(sabotage):
         rows.append(dict(rows[7]))                      # D1 duplicate primary key
         note("D1", "customers", "Duplicate customer_id 8 - a re-sent file loaded twice")
         rows[15]["email"] = ""                          # D2 empty required field
-        note("D2", "customers", "customer 16 has an empty email, loaded as a blank string not NULL")
+        note("D2", "customers", "customer 16 has an empty email")
         rows[23]["country"] = "USA"                     # D3 enum drift
         note("D3", "customers", "country 'USA' instead of ISO-2 'US' - one upstream system changed format")
         rows[31]["signup_date"] = "2027-06-01"          # D4 future date
-        note("D4", "customers", "signup_date in the future - a timezone bug upstream")
+        note("D4", "customers", "signup_date in the future")
     return rows
 
 def orders(sabotage, cust_ids):
@@ -53,12 +56,12 @@ def orders(sabotage, cust_ids):
         rows[100]["customer_id"] = 99999                # D5 orphan FK
         note("D5", "orders", "order 101 points at customer 99999 which does not exist")
         rows[200]["amount"] = -450.00                   # D6 negative amount
-        note("D6", "orders", "order 201 has a negative amount with status 'placed'")
+        note("D6", "orders", "order 201 has a negative amount on an order that is not a refund")
         rows[300]["currency"] = "EUR"                   # D7 silent currency switch
         rows[301]["currency"] = "EUR"
         note("D7", "orders", "orders 301-302 switched to EUR mid-file while the mart still sums as USD")
         rows[400]["amount"] = 4_500_000.00              # D8 magnitude outlier
-        note("D8", "orders", "order 401 amount is 4.5M - a cents/dollars unit mix-up")
+        note("D8", "orders", "order 401 amount is 4.5M - thousands of times any other order")
         rows[500]["status"] = "Delivered"               # D9 case drift in enum
         note("D9", "orders", "status 'Delivered' with a capital D - breaks exact-match filters")
         rows.append(dict(rows[600]))                    # D10 duplicate order
@@ -66,7 +69,7 @@ def orders(sabotage, cust_ids):
         rows[700]["order_date"] = "2024-01-05"          # D11 out-of-window date
         note("D11", "orders", "order 701 dated before the reporting window opens")
         rows[800]["amount"] = ""                        # D12 empty numeric
-        note("D12", "orders", "order 801 amount arrived empty and loads as 0")
+        note("D12", "orders", "order 801 amount arrived empty")
     return rows
 
 def write(name, rows, fields):
