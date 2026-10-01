@@ -38,7 +38,7 @@ models:
           - within_magnitude:
               max_value: 100000
       - name: status_raw
-        description: Case matters downstream, so the raw value is tested, not the normalised one.
+        description: Case matters downstream, so this is tested rather than status_normalised. It is trim(status), not untouched - see Known limits in the README.
         tests:
           - accepted_values:
               values: ["placed", "shipped", "delivered", "returned"]
